@@ -19,6 +19,8 @@ Depth testing
 | G     | Scale Down       |
 | Space | Toggle Animation |
 | ESC   | Exit Program     |
+
+
 Technologies Used
 C++
 OpenGL
