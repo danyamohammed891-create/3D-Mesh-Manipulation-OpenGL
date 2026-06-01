@@ -1,0 +1,151 @@
+#include <GL/glut.h>
+#include <iostream>
+
+// --- Project Requirements Variables ---
+// 4. Transformations & 5. Animation states
+float posX = 0.0f, posY = 0.0f, posZ = 0.0f;  // Translation
+float rotX = 0.0f, rotY = 0.0f, rotZ = 0.0f;  // Rotation
+float scaleX = 1.0f, scaleY = 1.0f, scaleZ = 1.0f; // Scaling
+bool isAnimated = true;                        // Animation toggle
+
+// 2. Camera variables
+float camX = 0.0f, camY = 3.0f, camZ = 5.0f;  // Camera Position
+
+// 1. & 3. Create a 3D Mesh with Colors
+void drawColoredCube() {
+    glBegin(GL_QUADS);
+
+    // Front Face (Red)
+    glColor3f(1.0f, 0.0f, 0.0f);
+    glVertex3f(-1.0f, -1.0f,  1.0f);
+    glVertex3f( 1.0f, -1.0f,  1.0f);
+    glVertex3f( 1.0f,  1.0f,  1.0f);
+    glVertex3f(-1.0f,  1.0f,  1.0f);
+
+    // Back Face (Green)
+    glColor3f(0.0f, 1.0f, 0.0f);
+    glVertex3f(-1.0f, -1.0f, -1.0f);
+    glVertex3f(-1.0f,  1.0f, -1.0f);
+    glVertex3f( 1.0f,  1.0f, -1.0f);
+    glVertex3f( 1.0f, -1.0f, -1.0f);
+
+    // Top Face (Blue)
+    glColor3f(0.0f, 0.0f, 1.0f);
+    glVertex3f(-1.0f,  1.0f, -1.0f);
+    glVertex3f(-1.0f,  1.0f,  1.0f);
+    glVertex3f( 1.0f,  1.0f,  1.0f);
+    glVertex3f( 1.0f,  1.0f, -1.0f);
+
+    // Bottom Face (Yellow)
+    glColor3f(1.0f, 1.0f, 0.0f);
+    glVertex3f(-1.0f, -1.0f, -1.0f);
+    glVertex3f( 1.0f, -1.0f, -1.0f);
+    glVertex3f( 1.0f, -1.0f,  1.0f);
+    glVertex3f(-1.0f, -1.0f,  1.0f);
+
+    // Right Face (Magenta)
+    glColor3f(1.0f, 0.0f, 1.0f);
+    glVertex3f( 1.0f, -1.0f, -1.0f);
+    glVertex3f( 1.0f,  1.0f, -1.0f);
+    glVertex3f( 1.0f,  1.0f,  1.0f);
+    glVertex3f( 1.0f, -1.0f,  1.0f);
+
+    // Left Face (Cyan)
+    glColor3f(0.0f, 1.0f, 1.0f);
+    glVertex3f(-1.0f, -1.0f, -1.0f);
+    glVertex3f(-1.0f, -1.0f,  1.0f);
+    glVertex3f(-1.0f,  1.0f,  1.0f);
+    glVertex3f(-1.0f,  1.0f, -1.0f);
+
+    glEnd();
+}
+
+// Display callback function
+void display() {
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glLoadIdentity();
+
+    // 2. Implement Camera
+    // Parameters: Eye(x,y,z), Center/LookAt(x,y,z), Up-Vector(x,y,z)
+    gluLookAt(camX, camY, camZ,  0.0f, 0.0f, 0.0f,  0.0f, 1.0f, 0.0f);
+
+    glPushMatrix();
+        // 4. Apply Transformations (Order matters: Translate -> Rotate -> Scale)
+        glTranslatef(posX, posY, posZ);
+        glRotatef(rotX, 1.0f, 0.0f, 0.0f);
+        glRotatef(rotY, 0.0f, 1.0f, 0.0f);
+        glRotatef(rotZ, 0.0f, 0.0f, 1.0f);
+        glScalef(scaleX, scaleY, scaleZ);
+
+        // Draw the mesh
+        drawColoredCube();
+    glPopMatrix();
+
+    glutSwapBuffers();
+}
+
+// 5. Add Animation Function
+void timer(int value) {
+    if (isAnimated) {
+        rotY += 1.5f; // Continuously rotate the cube on the Y axis
+        if (rotY > 360.0f) rotY -= 360.0f;
+    }
+    
+    glutPostRedisplay(); // Redraw the scene
+    glutTimerFunc(16, timer, 0); // ~60 FPS update rate
+}
+
+// Interactive Keyboard Controls for testing transformations
+void keyboard(unsigned char key, int x, int y) {
+    switch (key) {
+        case ' ': isAnimated = !isAnimated; break; // Spacebar toggles animation
+        case 'w': posY += 0.1f; break;             // Translate Up
+        case 's': posY -= 0.1f; break;             // Translate Down
+        case 'a': posX -= 0.1f; break;             // Translate Left
+        case 'd': posX += 0.1f; break;             // Translate Right
+        case 't': scaleX += 0.1f; scaleY += 0.1f; scaleZ += 0.1f; break; // Scale Up
+        case 'g': scaleX -= 0.1f; scaleY -= 0.1f; scaleZ -= 0.1f; break; // Scale Down
+        case 27: exit(0); break;                   // Escape key exits
+    }
+}
+
+// Window resizing adjustments
+void reshape(int w, int h) {
+    if (h == 0) h = 1;
+    float aspect = (float)w / (float)h;
+
+    glViewport(0, 0, w, h);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluPerspective(45.0, aspect, 0.1, 100.0);
+    glMatrixMode(GL_MODELVIEW);
+}
+
+// OpenGL Initialization
+void init() {
+    glClearColor(0.1f, 0.1f, 0.15f, 1.0f); // Dark background
+    glEnable(GL_DEPTH_TEST);                // Enable Z-buffering for 3D depth
+}
+
+int main(int argc, char** argv) {
+    std::cout << "=== Interactive Controls ===" << std::endl;
+    std::cout << "[Space]  : Toggle Auto-Rotation Animation" << std::endl;
+    std::cout << "[W/S/A/D]: Translate Mesh (Up/Down/Left/Right)" << std::endl;
+    std::cout << "[T/G]    : Scale Mesh (Up/Down)" << std::endl;
+    std::cout << "[ESC]    : Exit Program" << std::endl;
+
+    glutInit(&argc, argv);
+    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
+    glutInitWindowSize(800, 600);
+    glutCreateWindow("Group Project: 3D Mesh Manipulation");
+
+    init();
+
+    glutDisplayFunc(display);
+    glutReshapeFunc(reshape);
+    glutKeyboardFunc(keyboard);
+    glutTimerFunc(0, timer, 0); // Start animation loop
+
+    glutMainLoop();
+    return 0;
+} 
